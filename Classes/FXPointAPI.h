@@ -1,15 +1,15 @@
 //
-//  FXExceptionHttpAPI.h
+//  FXPointAPI.h
 //  Test
 //
-//  Created by 张大宗 on 2017/10/13.
+//  Created by 张大宗 on 2017/10/17.
 //  Copyright © 2017年 张大宗. All rights reserved.
 //
 
 #import "BaseFXHttpRequest.h"
 #import "BaseFXHttpResponse.h"
 
-@interface FXExceptionHttpRequest : BaseFXHttpRequest
+@interface FXPointRequest : BaseFXHttpRequest
 
 @property (nonatomic, copy) NSString *url;
 
@@ -19,6 +19,6 @@
 
 @end
 
-@interface FXExceptionHttpResponse : BaseFXHttpResponse
+@interface FXPointResponse:BaseFXHttpResponse
 
 @end

@@ -9,14 +9,13 @@
 #import "FXExceptionDaq.h"
 #import "AFFXHttpEngine.h"
 #import "FXExceptionHttpAPI.h"
+#import "FXUtils.h"
 
 @interface FXExceptionDaq()
 
-@property (nonatomic, strong) NSString *exceptionUrl;
+@property (nonatomic, copy) NSString *exceptionUrl;
 
-@property (nonatomic, strong) NSDictionary *params;
-
-@property (nonatomic, strong) NSFileManager *fileManager;
+@property (nonatomic, copy) NSDictionary *params;
 
 @property (nonatomic, strong) AFFXHttpEngine *httpEngine;
 
@@ -28,12 +27,11 @@ DEF_SINGLETON_INIT(FXExceptionDaq)
 
 - (void)singleInit{
     self.httpEngine = [[AFFXHttpEngine alloc] init];
-    self.fileManager = [[NSFileManager alloc] init];
 }
 
 - (void)registerDaqUrl:(NSString *)url Params:(NSDictionary *)params{
     if (self.exceptionUrl){
-        if ([self.fileManager fileExistsAtPath:[FXExceptionDaq exceptionFilePath]]){
+        if ([FXFileUtils existFile:[FXExceptionDaq exceptionFilePath]]){
             [self uploadExceptionFile];
         }
         self.exceptionUrl = url;
@@ -41,14 +39,15 @@ DEF_SINGLETON_INIT(FXExceptionDaq)
     }else{
         self.exceptionUrl = url;
         self.params = params;
-        if ([self.fileManager fileExistsAtPath:[FXExceptionDaq exceptionFilePath]]){
+        if ([FXFileUtils existFile:[FXExceptionDaq exceptionFilePath]]){
             [self uploadExceptionFile];
         }
     }
 }
 
 - (void)uploadExceptionFile{
-    if (![self.httpEngine hasLoading] && self.exceptionUrl){
+    FX_WEAK_REF_TYPE selfObject = self;
+    if (![self.httpEngine hasLoading] && FX_STRING_IS_NOT_EMPTY(self.exceptionUrl)){
         FXExceptionHttpRequest *requset = [[FXExceptionHttpRequest alloc] init];
         [requset setUrl:self.exceptionUrl];
         [requset setParams:self.params];
@@ -56,14 +55,14 @@ DEF_SINGLETON_INIT(FXExceptionDaq)
         [self.httpEngine asynRequest:requset responseClass:[FXExceptionHttpResponse class] responseBlock:^(id<IFXHttpResponse> res, NSError *error) {
             if (error){
                 FXLogError(@"上传崩溃日志失败:%@",error.userInfo[NSLocalizedDescriptionKey]);
-                [self resaveExceptionWithParams];
+                [selfObject resaveExceptionWithParams];
             }else{
                 if ([res isError]){
                     FXLogError(@"上传崩溃日志失败:%@",[res errorMsg]);
-                    [self resaveExceptionWithParams];
+                    [selfObject resaveExceptionWithParams];
                 }else{
                     FXLogInfo(@"上传崩溃日志成功");
-                    [self clearExceptionFile];
+                    [selfObject clearExceptionFile];
                 }
             }
         }];
@@ -71,15 +70,7 @@ DEF_SINGLETON_INIT(FXExceptionDaq)
 }
 
 - (BOOL)clearExceptionFile{
-    if ([self.fileManager fileExistsAtPath:[FXExceptionDaq exceptionFilePath]]){
-        NSError *error = nil;
-        BOOL success = [self.fileManager removeItemAtPath:[FXExceptionDaq exceptionFilePath] error:&error];
-        if (!success){
-            FXLogError(@"清除崩溃日志失败:%@",error.userInfo[NSLocalizedDescriptionKey]);
-        }
-        return success;
-    }
-    return YES;
+    return [FXFileUtils deleteFile:[FXExceptionDaq exceptionFilePath]];
 }
 
 - (void)resaveExceptionWithParams{
@@ -88,7 +79,7 @@ DEF_SINGLETON_INIT(FXExceptionDaq)
     for (int i=0;i<currentExcep.count;i++){
         NSMutableDictionary *newDict = [currentExcep[i] mutableCopy];
         if (![newDict objectForKey:@"Params"]){
-            [newDict setObject:@"Params" forKey:self.params];
+            [newDict setObject:self.params forKey:@"Params"];
         }
         [newExcep addObject:newDict];
     }
@@ -97,7 +88,6 @@ DEF_SINGLETON_INIT(FXExceptionDaq)
 
 - (void)appDidLaunchWithOptions:(NSDictionary *)options{
     NSSetUncaughtExceptionHandler(&fxUncaughtExceptionHandler);
-    signal(SIGABRT, MySignalHandler);
 }
 
 static void fxUncaughtExceptionHandler (NSException *exception) {
@@ -115,9 +105,7 @@ static void fxUncaughtExceptionHandler (NSException *exception) {
 }
 
 + (NSString*)exceptionFilePath{
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *docDir = [paths objectAtIndex:0];
-    return [docDir stringByAppendingString:@"/FXException.txt"];
+    return [[FXFileUtils documentDir] stringByAppendingString:@"/FXException.txt"];
 }
 
 @end

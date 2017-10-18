@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "FXDaq"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "数据收集模块"
 
   s.homepage     = "https://github.com/zqw87699/FXDaq"
