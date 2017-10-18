@@ -11,7 +11,7 @@
 
 #import "FXPointDaq.h"
 #import "UIViewController+FXPointDaq.h"
-
+#import "UIControl+FXPointDaq.h"
 #import "FXExceptionDaq.h"
 
 #endif /* FXDaq_h */

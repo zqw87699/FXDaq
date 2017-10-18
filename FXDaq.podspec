@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "FXDaq"
-  s.version      = "1.0.1"
+  s.version      = "1.0.2"
   s.summary      = "数据收集模块"
 
   s.homepage     = "https://github.com/zqw87699/FXDaq"
@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.dependency "FXCommon"
+  s.dependency "FXUtils"
   s.dependency "FXHttpEngine"
   s.dependency "FXAppContext"
 
